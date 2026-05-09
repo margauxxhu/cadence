@@ -4,7 +4,7 @@ import { addDays, addWeeks, addMinutes, startOfDay } from 'date-fns'
 import { toZonedTime, fromZonedTime } from 'date-fns-tz'
 import { z } from 'zod'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { resend, buildAddLessonEmail } from '@/lib/resend'
+import { sendEmail, buildAddLessonEmail } from '@/lib/email'
 import { formatLessonTime } from '@/lib/format-lesson-time'
 
 const TZ = 'America/Los_Angeles'
@@ -174,12 +174,8 @@ export async function addLesson(
   if (insertErr) return { error: insertErr.message }
 
   try {
-    await resend.emails.send({
-      from: process.env.RESEND_FROM ?? 'Cadence <onboarding@resend.dev>',
-      to: process.env.TEACHER_EMAIL ?? '',
-      subject: buildAddLessonEmail({ studentName: student.name, scheduledAt: parsed.data.scheduledAt, durationMinutes: parsed.data.durationMinutes, note: parsed.data.note, isPending }).subject,
-      html: buildAddLessonEmail({ studentName: student.name, scheduledAt: parsed.data.scheduledAt, durationMinutes: parsed.data.durationMinutes, note: parsed.data.note, isPending }).html,
-    })
+    const emailContent = buildAddLessonEmail({ studentName: student.name, scheduledAt: parsed.data.scheduledAt, durationMinutes: parsed.data.durationMinutes, note: parsed.data.note, isPending })
+    await sendEmail(process.env.TEACHER_EMAIL ?? '', emailContent.subject, emailContent.html)
   } catch {
     // Don't fail if email delivery fails
   }

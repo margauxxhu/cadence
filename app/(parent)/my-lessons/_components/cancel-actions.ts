@@ -3,7 +3,7 @@
 import { differenceInHours } from 'date-fns'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
-import { resend, buildCancelEmail } from '@/lib/resend'
+import { sendEmail, buildCancelEmail } from '@/lib/email'
 
 const Schema = z.object({
   lessonId: z.string().uuid(),
@@ -64,12 +64,7 @@ export async function cancelLesson(
   })
 
   try {
-    await resend.emails.send({
-      from: process.env.RESEND_FROM ?? 'Cadence <onboarding@resend.dev>',
-      to: process.env.TEACHER_EMAIL ?? '',
-      subject: emailContent.subject,
-      html: emailContent.html,
-    })
+    await sendEmail(process.env.TEACHER_EMAIL ?? '', emailContent.subject, emailContent.html)
   } catch {
     // Don't fail the cancellation if email delivery fails
   }

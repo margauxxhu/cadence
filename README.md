@@ -86,10 +86,9 @@ Designed to run on free tiers. One teacher, one deployment.
 |---|---|---|
 | [Supabase](https://supabase.com) | Database, auth, row-level security | Free |
 | [Vercel](https://vercel.com) | Hosting + daily cron | Free |
-| [Resend](https://resend.com) | Notification emails | Free up to 3,000/mo |
-| A custom domain | Verified sender for Resend (production only) | ~$10–15/yr |
+| A Gmail account | Notification emails via SMTP | Free |
 
-> Without a verified sender domain, Resend can only deliver to the account owner's email. For local testing or a setup where the teacher's email matches the Resend account, this is sufficient. Sending notifications to parent emails requires a verified domain.
+No custom domain required. Emails send from the teacher's own Gmail address.
 
 ### Setup steps
 
@@ -109,8 +108,8 @@ Designed to run on free tiers. One teacher, one deployment.
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key (server-side only) |
-| `RESEND_API_KEY` | Resend API key |
-| `RESEND_FROM` | Verified sender, e.g. `Cadence <hello@yourdomain.com>` |
+| `GMAIL_USER` | Gmail address used to send notifications |
+| `GMAIL_APP_PASSWORD` | App Password from myaccount.google.com/apppasswords |
 | `TEACHER_EMAIL` | Where teacher notifications are delivered |
 | `NEXT_PUBLIC_APP_URL` | Your deployment URL, e.g. `https://cadence.yourdomain.com` |
 | `CRON_SECRET` | Random secret to authenticate the lesson-generation cron endpoint |
@@ -153,6 +152,6 @@ Open [http://localhost:3000](http://localhost:3000).
 | Framework | Next.js 16 (App Router, Server Actions) |
 | Database + Auth | Supabase (Postgres + magic-link) |
 | Styling | Tailwind CSS v4 |
-| Email | Resend |
+| Email | Gmail SMTP (nodemailer) |
 | Deployment | Vercel |
 | Package manager | pnpm |

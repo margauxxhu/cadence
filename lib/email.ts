@@ -1,7 +1,24 @@
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 import { formatLessonTime } from './format-lesson-time'
 
-export const resend = new Resend(process.env.RESEND_API_KEY)
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+})
+
+export async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+  await transporter.sendMail({
+    from: `Cadence <${process.env.GMAIL_USER}>`,
+    to,
+    subject,
+    html,
+  })
+}
+
+// ── Email builders ────────────────────────────────────────────────────────────
 
 interface CancelEmailParams {
   studentName: string
@@ -14,7 +31,6 @@ interface CancelEmailParams {
 
 export function buildCancelEmail(p: CancelEmailParams) {
   const time = formatLessonTime(p.scheduledAt, 'datetime')
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
   const lateWarning = p.isLate
     ? '<p style="color:#b45309;font-weight:bold;">⚠️ This cancellation is within 24 hours of the lesson.</p>'
     : ''
@@ -30,10 +46,32 @@ export function buildCancelEmail(p: CancelEmailParams) {
       <p><strong>Lesson time:</strong> ${time} (Pacific)</p>
       <p><strong>Duration:</strong> ${p.durationMinutes} min</p>
       <p><strong>Parent's note:</strong> "${p.note}"</p>
-      <p><a href="${appUrl}/lessons?id=${p.lessonId}">View lesson in Cadence →</a></p>
     </div>
   `
+  return { subject, html }
+}
 
+interface RescheduleEmailParams {
+  studentName: string
+  originalAt: string | Date
+  newAt: string | Date
+  durationMinutes: number
+  note: string
+  newLessonId: string
+}
+
+export function buildRescheduleEmail(p: RescheduleEmailParams) {
+  const subject = `Reschedule — ${p.studentName} (${formatLessonTime(p.originalAt, 'short')} → ${formatLessonTime(p.newAt, 'short')})`
+
+  const html = `
+    <div style="font-family:sans-serif;max-width:480px;">
+      <p><strong>Student:</strong> ${p.studentName}</p>
+      <p><strong>Original time:</strong> ${formatLessonTime(p.originalAt, 'datetime')} (Pacific)</p>
+      <p><strong>New time:</strong> ${formatLessonTime(p.newAt, 'datetime')} (Pacific)</p>
+      <p><strong>Duration:</strong> ${p.durationMinutes} min</p>
+      <p><strong>Parent's note:</strong> "${p.note}"</p>
+    </div>
+  `
   return { subject, html }
 }
 
@@ -46,7 +84,6 @@ interface AddLessonEmailParams {
 }
 
 export function buildAddLessonEmail(p: AddLessonEmailParams) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
   const subject = p.isPending
     ? `Trial request — ${p.studentName} (${formatLessonTime(p.scheduledAt, 'short')})`
     : `New lesson — ${p.studentName} (${formatLessonTime(p.scheduledAt, 'short')})`
@@ -62,7 +99,6 @@ export function buildAddLessonEmail(p: AddLessonEmailParams) {
       <p><strong>Time:</strong> ${formatLessonTime(p.scheduledAt, 'datetime')} (Pacific)</p>
       <p><strong>Duration:</strong> ${p.durationMinutes} min</p>
       ${p.note ? `<p><strong>Note:</strong> "${p.note}"</p>` : ''}
-      ${p.isPending ? `<p><a href="${appUrl}/dashboard">Review in Cadence →</a></p>` : ''}
     </div>
   `
   return { subject, html }
@@ -90,33 +126,5 @@ export function buildApprovalEmail(p: ApprovalEmailParams) {
       <p><strong>Duration:</strong> ${p.durationMinutes} min</p>
     </div>
   `
-  return { subject, html }
-}
-
-interface RescheduleEmailParams {
-  studentName: string
-  originalAt: string | Date
-  newAt: string | Date
-  durationMinutes: number
-  note: string
-  newLessonId: string
-}
-
-export function buildRescheduleEmail(p: RescheduleEmailParams) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
-
-  const subject = `Reschedule — ${p.studentName} (${formatLessonTime(p.originalAt, 'short')} → ${formatLessonTime(p.newAt, 'short')})`
-
-  const html = `
-    <div style="font-family:sans-serif;max-width:480px;">
-      <p><strong>Student:</strong> ${p.studentName}</p>
-      <p><strong>Original time:</strong> ${formatLessonTime(p.originalAt, 'datetime')} (Pacific)</p>
-      <p><strong>New time:</strong> ${formatLessonTime(p.newAt, 'datetime')} (Pacific)</p>
-      <p><strong>Duration:</strong> ${p.durationMinutes} min</p>
-      <p><strong>Parent's note:</strong> "${p.note}"</p>
-      <p><a href="${appUrl}/lessons?id=${p.newLessonId}">View lesson in Cadence →</a></p>
-    </div>
-  `
-
   return { subject, html }
 }

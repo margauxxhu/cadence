@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { resend, buildApprovalEmail } from '@/lib/resend'
+import { sendEmail, buildApprovalEmail } from '@/lib/email'
 
 export async function approveLesson(lessonId: string): Promise<{ error?: string }> {
   const supabase = await createClient()
@@ -31,12 +31,7 @@ export async function approveLesson(lessonId: string): Promise<{ error?: string 
         durationMinutes: lesson.duration_minutes,
         approved: true,
       })
-      await resend.emails.send({
-        from: process.env.RESEND_FROM ?? 'Cadence <onboarding@resend.dev>',
-        to: parentEmail,
-        subject: email.subject,
-        html: email.html,
-      })
+      await sendEmail(parentEmail, email.subject, email.html)
     } catch { /* don't fail if email fails */ }
   }
 
@@ -72,12 +67,7 @@ export async function declineLesson(lessonId: string): Promise<{ error?: string 
         durationMinutes: lesson.duration_minutes,
         approved: false,
       })
-      await resend.emails.send({
-        from: process.env.RESEND_FROM ?? 'Cadence <onboarding@resend.dev>',
-        to: parentEmail,
-        subject: email.subject,
-        html: email.html,
-      })
+      await sendEmail(parentEmail, email.subject, email.html)
     } catch { /* don't fail if email fails */ }
   }
 
