@@ -9,7 +9,7 @@ export default async function AvailabilityPage() {
   const [{ data: periods }, { data: blackouts }] = await Promise.all([
     supabase
       .from('availability_periods')
-      .select('id, name, start_date, end_date, availability_windows(id, weekday, start_time, end_time), period_exceptions(id, exception_date, reason)')
+      .select('id, name, start_date, end_date, availability_windows(id, weekday, start_time, end_time), period_exceptions(id, exception_date, reason, block_start, block_end)')
       .order('start_date'),
     supabase
       .from('blackouts')

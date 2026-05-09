@@ -187,18 +187,24 @@ export type Database = {
       }
       period_exceptions: {
         Row: {
+          block_end: string | null
+          block_start: string | null
           exception_date: string
           id: string
           period_id: string
           reason: string | null
         }
         Insert: {
+          block_end?: string | null
+          block_start?: string | null
           exception_date: string
           id?: string
           period_id: string
           reason?: string | null
         }
         Update: {
+          block_end?: string | null
+          block_start?: string | null
           exception_date?: string
           id?: string
           period_id?: string
