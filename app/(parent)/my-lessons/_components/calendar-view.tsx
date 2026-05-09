@@ -11,15 +11,16 @@ const MONTH_NAMES = [
 ]
 
 interface Props {
-  lessonDates: Set<string>   // 'yyyy-MM-dd' strings in LA timezone
+  lessonDates: Set<string>      // 'yyyy-MM-dd' — all scheduled lessons
+  conflictedDates?: Set<string> // subset of lessonDates with teacher conflicts
   year: number
-  month: number              // 0-indexed
+  month: number                 // 0-indexed
   onMonthChange: (year: number, month: number) => void
 }
 
-export function CalendarView({ lessonDates, year, month, onMonthChange }: Props) {
+export function CalendarView({ lessonDates, conflictedDates, year, month, onMonthChange }: Props) {
   const firstOfMonth = new Date(year, month, 1)
-  const startWeekday = firstOfMonth.getDay() // 0=Sun
+  const startWeekday = firstOfMonth.getDay()
   const daysInMonth = getDaysInMonth(firstOfMonth)
 
   const todayLA = toZonedTime(new Date(), TZ)
@@ -27,9 +28,7 @@ export function CalendarView({ lessonDates, year, month, onMonthChange }: Props)
   const todayMonth = todayLA.getMonth()
   const todayDate = todayLA.getDate()
 
-  function pad(n: number) {
-    return String(n).padStart(2, '0')
-  }
+  function pad(n: number) { return String(n).padStart(2, '0') }
 
   function goToPrev() {
     const d = subMonths(firstOfMonth, 1)
@@ -41,7 +40,6 @@ export function CalendarView({ lessonDates, year, month, onMonthChange }: Props)
     onMonthChange(d.getFullYear(), d.getMonth())
   }
 
-  // Build a flat array of cells: null = empty padding, number = day
   const cells: (number | null)[] = [
     ...Array(startWeekday).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
@@ -84,24 +82,27 @@ export function CalendarView({ lessonDates, year, month, onMonthChange }: Props)
           if (day === null) return <div key={i} />
 
           const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`
-          const hasLesson = lessonDates.has(dateStr)
           const isToday = year === todayYear && month === todayMonth && day === todayDate
+          const hasConflict = conflictedDates?.has(dateStr) ?? false
+          const hasLesson = lessonDates.has(dateStr)
+
+          // Dot color: amber for conflicts, blue for normal lessons
+          const dotColor = hasConflict
+            ? (isToday ? 'bg-amber-400' : 'bg-amber-500')
+            : (isToday ? 'bg-blue-300' : 'bg-blue-500')
 
           return (
             <div key={i} className="flex flex-col items-center py-0.5">
               <div
                 className={`
                   w-8 h-8 flex items-center justify-center rounded-full text-sm transition-colors
-                  ${isToday
-                    ? 'bg-blue-600 text-white font-semibold'
-                    : 'text-gray-800'
-                  }
+                  ${isToday ? 'bg-blue-600 text-white font-semibold' : 'text-gray-800'}
                 `}
               >
                 {day}
               </div>
-              <div className={`h-1.5 ${hasLesson ? 'opacity-100' : 'opacity-0'}`}>
-                <div className={`w-1.5 h-1.5 rounded-full ${isToday ? 'bg-blue-300' : 'bg-blue-500'}`} />
+              <div className={`h-1.5 ${(hasLesson || hasConflict) ? 'opacity-100' : 'opacity-0'}`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
               </div>
             </div>
           )
