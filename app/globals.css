@@ -1,26 +1,30 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf8f5;
+  --foreground: #1c1917;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-dm-sans);
+  --font-display: var(--font-cormorant);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
+  /* Warm ambient glows at opposing corners — like soft candlelight */
+  background-image:
+    radial-gradient(ellipse at 12% 10%, rgba(252, 235, 210, 0.55) 0%, transparent 52%),
+    radial-gradient(ellipse at 88% 90%, rgba(232, 214, 190, 0.35) 0%, transparent 52%);
+  background-attachment: fixed;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans, 'DM Sans', sans-serif);
+}
+
+/* All h1s automatically pick up the display serif */
+h1 {
+  font-family: var(--font-display), Georgia, serif;
+  letter-spacing: -0.02em;
 }

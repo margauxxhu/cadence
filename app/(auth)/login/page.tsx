@@ -30,8 +30,8 @@ export default function TeacherLoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-sm bg-white rounded-xl shadow p-8">
+    <main className="min-h-screen flex items-center justify-center">
+      <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-stone-200 p-8">
         <h1 className="text-2xl font-semibold mb-6">Teacher Sign In</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

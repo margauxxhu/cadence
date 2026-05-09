@@ -7,16 +7,20 @@ export default async function ParentLayout({ children }: { children: React.React
   if (!user) redirect('/magic-link')
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b">
-        <div className="max-w-2xl mx-auto px-4 flex items-center justify-between h-14">
-          <span className="font-semibold text-blue-600">Cadence</span>
+    <div className="min-h-screen">
+      <nav className="bg-stone-900 border-b border-stone-800">
+        <div className="max-w-4xl mx-auto px-6 flex items-center justify-between h-14">
+          <span className="font-display text-stone-100 text-xl font-light tracking-[0.18em]">
+            Cadence
+          </span>
           <form action="/api/auth/signout" method="post">
-            <button className="text-sm text-gray-500 hover:text-gray-700">Sign out</button>
+            <button className="text-sm text-stone-500 hover:text-stone-300 transition-colors">
+              Sign out
+            </button>
           </form>
         </div>
       </nav>
-      <main className="max-w-2xl mx-auto px-4 py-8">{children}</main>
+      <main className="max-w-4xl mx-auto px-6 py-10">{children}</main>
     </div>
   )
 }

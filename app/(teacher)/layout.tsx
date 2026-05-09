@@ -26,27 +26,33 @@ export default async function TeacherLayout({ children }: { children: React.Reac
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b">
-        <div className="max-w-6xl mx-auto px-4 flex items-center gap-6 h-14">
-          <span className="font-semibold text-blue-600">Cadence</span>
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="text-sm text-gray-600 hover:text-gray-900"
-            >
-              {item.label}
-            </Link>
-          ))}
+    <div className="min-h-screen">
+      <nav className="bg-stone-900 border-b border-stone-800">
+        <div className="max-w-6xl mx-auto px-6 flex items-center gap-8 h-14">
+          <span className="font-display text-stone-100 text-xl font-light tracking-[0.18em] shrink-0">
+            Cadence
+          </span>
+          <div className="flex items-center gap-6">
+            {NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="text-sm text-stone-400 hover:text-stone-100 transition-colors"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
           <div className="ml-auto">
             <form action="/api/auth/signout" method="post">
-              <button className="text-sm text-gray-500 hover:text-gray-700">Sign out</button>
+              <button className="text-sm text-stone-500 hover:text-stone-300 transition-colors">
+                Sign out
+              </button>
             </form>
           </div>
         </div>
       </nav>
-      <main className="max-w-6xl mx-auto px-4 py-8">{children}</main>
+      <main className="max-w-6xl mx-auto px-6 py-10">{children}</main>
     </div>
   )
 }

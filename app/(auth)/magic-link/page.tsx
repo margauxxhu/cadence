@@ -36,8 +36,8 @@ export default function MagicLinkPage() {
 
   if (sent) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-full max-w-sm bg-white rounded-xl shadow p-8 text-center">
+      <main className="min-h-screen flex items-center justify-center">
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-stone-200 p-8 text-center">
           <h1 className="text-2xl font-semibold mb-3">Check your email</h1>
           <p className="text-gray-600 text-sm">
             We sent a sign-in link to <strong>{email}</strong>. Click it to access your lessons.
@@ -48,8 +48,8 @@ export default function MagicLinkPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-sm bg-white rounded-xl shadow p-8">
+    <main className="min-h-screen flex items-center justify-center">
+      <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-stone-200 p-8">
         <h1 className="text-2xl font-semibold mb-2">Parent Sign In</h1>
         <p className="text-gray-500 text-sm mb-6">We&apos;ll email you a link to view your lessons.</p>
         <form onSubmit={handleSubmit} className="space-y-4">
