@@ -58,12 +58,12 @@ Teacher (browser)                         Parent (email → browser)
                            │
               ┌────────────┴────────────┐
               ▼                         ▼
-       ┌─────────────┐           ┌────────────┐
-       │  Supabase   │           │   Resend   │
-       │  Postgres   │           │            │
+       ┌─────────────┐           ┌────────────────┐
+       │  Supabase   │           │  Gmail SMTP    │
+       │  Postgres   │           │  (nodemailer)  │
        │  + Auth     │           │ ──▶ teacher email
        │  + RLS      │           │ ──▶ parent email
-       └─────────────┘           └────────────┘
+       └─────────────┘           └────────────────┘
 ```
 
 **Key decisions**
