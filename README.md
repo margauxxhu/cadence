@@ -1,6 +1,6 @@
 # Cadence
 
-Scheduling software built for a single piano teacher managing ~30 students. Replaces the back-and-forth of text messages for cancellations and reschedules with a clean parent-facing portal — without requiring parents to create yet another account.
+Scheduling software built for a single piano teacher managing ~50 students. Replaces the back-and-forth of text messages for cancellations and reschedules with a clean parent-facing portal — without requiring parents to create yet another account.
 
 ## Why Cadence
 
