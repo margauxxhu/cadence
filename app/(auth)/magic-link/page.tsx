@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/browser'
+import { requestMagicLink } from './actions'
 
 export default function MagicLinkPage() {
   const [email, setEmail] = useState('')
@@ -14,18 +14,10 @@ export default function MagicLinkPage() {
     setError('')
     setLoading(true)
 
-    const supabase = createClient()
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin
-    const { error: authError } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${appUrl}/auth/callback?next=/my-lessons`,
-        shouldCreateUser: true,
-      },
-    })
+    const { error: err } = await requestMagicLink(email)
 
-    if (authError) {
-      setError(authError.message)
+    if (err) {
+      setError(err)
       setLoading(false)
       return
     }
