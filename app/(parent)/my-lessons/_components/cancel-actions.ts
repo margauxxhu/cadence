@@ -64,16 +64,14 @@ export async function cancelLesson(
   })
 
   try {
-    const { data: emailData, error: emailErr } = await resend.emails.send({
+    await resend.emails.send({
       from: process.env.RESEND_FROM ?? 'Cadence <onboarding@resend.dev>',
       to: process.env.TEACHER_EMAIL ?? '',
       subject: emailContent.subject,
       html: emailContent.html,
     })
-    if (emailErr) console.error('[cancel] Resend error:', emailErr)
-    else console.log('[cancel] Email sent OK, id:', emailData?.id)
-  } catch (e) {
-    console.error('[cancel] Email send threw:', e)
+  } catch {
+    // Don't fail the cancellation if email delivery fails
   }
 
   return { success: true, wasLate: isLate }

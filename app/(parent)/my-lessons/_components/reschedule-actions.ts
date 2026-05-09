@@ -206,15 +206,14 @@ export async function rescheduleLesson(
   })
 
   try {
-    const { error: emailErr } = await resend.emails.send({
+    await resend.emails.send({
       from: process.env.RESEND_FROM ?? 'Cadence <onboarding@resend.dev>',
       to: process.env.TEACHER_EMAIL ?? '',
       subject: emailContent.subject,
       html: emailContent.html,
     })
-    if (emailErr) console.error('[reschedule] Resend error:', emailErr)
-  } catch (e) {
-    console.error('[reschedule] Email send threw:', e)
+  } catch {
+    // Don't fail the reschedule if email delivery fails
   }
 
   return { success: true }
