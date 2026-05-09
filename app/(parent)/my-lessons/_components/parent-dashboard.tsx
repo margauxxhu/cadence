@@ -6,6 +6,7 @@ import { toZonedTime } from 'date-fns-tz'
 import { CalendarView } from './calendar-view'
 import { CancelDialog } from './cancel-dialog'
 import { RescheduleDialog } from './reschedule-dialog'
+import { AddLessonDialog } from './add-lesson-dialog'
 import { formatLessonTime } from '@/lib/format-lesson-time'
 
 const TZ = 'America/Los_Angeles'
@@ -18,10 +19,13 @@ interface Lesson {
   students: { name: string } | null
 }
 
+interface Student { id: string; name: string }
+
 interface Props {
   lessons: Lesson[]
   parentName: string
   conflictedIds: string[]
+  students: Student[]
 }
 
 function toLADateStr(scheduledAt: string): string {
@@ -29,7 +33,7 @@ function toLADateStr(scheduledAt: string): string {
   return `${la.getFullYear()}-${String(la.getMonth() + 1).padStart(2, '0')}-${String(la.getDate()).padStart(2, '0')}`
 }
 
-export function ParentDashboard({ lessons: initial, parentName, conflictedIds }: Props) {
+export function ParentDashboard({ lessons: initial, parentName, conflictedIds, students }: Props) {
   const router = useRouter()
   const todayLA = toZonedTime(new Date(), TZ)
   const [year, setYear] = useState(todayLA.getFullYear())
@@ -61,9 +65,12 @@ export function ParentDashboard({ lessons: initial, parentName, conflictedIds }:
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold">My Lessons</h1>
-        <p className="text-gray-500 text-sm mt-1">Hi, {parentName}</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold">My Lessons</h1>
+          <p className="text-gray-500 text-sm mt-1">Hi, {parentName}</p>
+        </div>
+        <AddLessonDialog students={students} onAdded={() => router.refresh()} />
       </div>
 
       <div className="flex gap-4 items-start">
@@ -104,7 +111,9 @@ export function ParentDashboard({ lessons: initial, parentName, conflictedIds }:
                     <div
                       key={lesson.id}
                       className={`rounded-xl p-3 space-y-1.5 ${
-                        isConflicted
+                        lesson.status === 'pending'
+                          ? 'border border-blue-200 bg-blue-50/40'
+                          : isConflicted
                           ? 'border border-amber-300 bg-amber-50/50'
                           : 'border'
                       }`}
@@ -115,23 +124,28 @@ export function ParentDashboard({ lessons: initial, parentName, conflictedIds }:
                       <p className="text-xs text-gray-500">
                         {formatLessonTime(lesson.scheduled_at, 'short')} · {lesson.duration_minutes} min
                       </p>
-                      {isConflicted && (
+                      {lesson.status === 'pending' && (
+                        <p className="text-xs text-blue-600 font-medium">⏳ Awaiting teacher confirmation</p>
+                      )}
+                      {isConflicted && lesson.status !== 'pending' && (
                         <p className="text-xs text-amber-700 font-medium">
                           ⚠ Teacher unavailable — please reschedule
                         </p>
                       )}
-                      <div className="flex gap-3 pt-0.5">
-                        <RescheduleDialog
-                          lessonId={lesson.id}
-                          scheduledAt={lesson.scheduled_at}
-                          onRescheduled={() => removeLesson(lesson.id)}
-                        />
-                        <CancelDialog
-                          lessonId={lesson.id}
-                          scheduledAt={lesson.scheduled_at}
-                          onCancelled={() => removeLesson(lesson.id)}
-                        />
-                      </div>
+                      {lesson.status !== 'pending' && (
+                        <div className="flex gap-3 pt-0.5">
+                          <RescheduleDialog
+                            lessonId={lesson.id}
+                            scheduledAt={lesson.scheduled_at}
+                            onRescheduled={() => removeLesson(lesson.id)}
+                          />
+                          <CancelDialog
+                            lessonId={lesson.id}
+                            scheduledAt={lesson.scheduled_at}
+                            onCancelled={() => removeLesson(lesson.id)}
+                          />
+                        </div>
+                      )}
                     </div>
                   )
                 })}

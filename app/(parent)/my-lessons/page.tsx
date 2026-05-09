@@ -51,7 +51,7 @@ export default async function MyLessonsPage() {
       .from('lessons')
       .select('id, scheduled_at, duration_minutes, status, students(name)')
       .in('student_id', studentIds.length ? studentIds : ['00000000-0000-0000-0000-000000000000'])
-      .eq('status', 'scheduled')
+      .in('status', ['scheduled', 'pending'])
       .gte('scheduled_at', monthStart.toISOString())
       .order('scheduled_at')
       .limit(200),
@@ -84,11 +84,14 @@ export default async function MyLessonsPage() {
     }
   }
 
+  const students = (family.students as { id: string; name: string }[])
+
   return (
     <ParentDashboard
       lessons={lessons ?? []}
       parentName={family.parent_name}
       conflictedIds={conflictedIds}
+      students={students}
     />
   )
 }

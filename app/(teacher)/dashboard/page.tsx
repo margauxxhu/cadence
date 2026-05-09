@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatLessonTime } from '@/lib/format-lesson-time'
 import Link from 'next/link'
 import { addWeeks, startOfDay } from 'date-fns'
+import { PendingRequests } from './_components/pending-requests'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -9,7 +10,7 @@ export default async function DashboardPage() {
   const now = new Date()
   const weekEnd = addWeeks(startOfDay(now), 1)
 
-  const [{ data: upcomingLessons }, { count: studentCount }, { data: settings }] =
+  const [{ data: upcomingLessons }, { data: pendingLessons }, { count: studentCount }, { data: settings }] =
     await Promise.all([
       supabase
         .from('lessons')
@@ -17,6 +18,11 @@ export default async function DashboardPage() {
         .eq('status', 'scheduled')
         .gte('scheduled_at', now.toISOString())
         .lte('scheduled_at', weekEnd.toISOString())
+        .order('scheduled_at'),
+      supabase
+        .from('lessons')
+        .select('id, scheduled_at, duration_minutes, note, students(name, families(parent_email))')
+        .eq('status', 'pending')
         .order('scheduled_at'),
       supabase.from('students').select('id', { count: 'exact', head: true }).eq('active', true),
       supabase.from('teacher_settings').select('ical_token').single(),
@@ -33,6 +39,8 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-semibold">Dashboard</h1>
         <p className="text-gray-500 text-sm mt-1">{studentCount ?? 0} active students</p>
       </div>
+
+      {!!pendingLessons?.length && <PendingRequests lessons={pendingLessons as any} />}
 
       <section>
         <h2 className="text-lg font-medium mb-3">This week</h2>

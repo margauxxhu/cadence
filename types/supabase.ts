@@ -314,7 +314,12 @@ export type Database = {
       my_family_id: { Args: never; Returns: string }
     }
     Enums: {
-      lesson_status: "scheduled" | "cancelled" | "rescheduled" | "completed"
+      lesson_status:
+        | "scheduled"
+        | "cancelled"
+        | "rescheduled"
+        | "completed"
+        | "pending"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -445,7 +450,13 @@ export const Constants = {
   },
   public: {
     Enums: {
-      lesson_status: ["scheduled", "cancelled", "rescheduled", "completed"],
+      lesson_status: [
+        "scheduled",
+        "cancelled",
+        "rescheduled",
+        "completed",
+        "pending",
+      ],
     },
   },
 } as const

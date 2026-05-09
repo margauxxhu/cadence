@@ -37,6 +37,62 @@ export function buildCancelEmail(p: CancelEmailParams) {
   return { subject, html }
 }
 
+interface AddLessonEmailParams {
+  studentName: string
+  scheduledAt: string | Date
+  durationMinutes: number
+  note: string
+  isPending: boolean
+}
+
+export function buildAddLessonEmail(p: AddLessonEmailParams) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const subject = p.isPending
+    ? `Trial request — ${p.studentName} (${formatLessonTime(p.scheduledAt, 'short')})`
+    : `New lesson — ${p.studentName} (${formatLessonTime(p.scheduledAt, 'short')})`
+
+  const statusLine = p.isPending
+    ? '<p style="color:#b45309;font-weight:bold;">⏳ Trial request — please review and approve in Cadence.</p>'
+    : '<p style="color:#15803d;font-weight:bold;">✓ Lesson confirmed automatically.</p>'
+
+  const html = `
+    <div style="font-family:sans-serif;max-width:480px;">
+      ${statusLine}
+      <p><strong>Student:</strong> ${p.studentName}</p>
+      <p><strong>Time:</strong> ${formatLessonTime(p.scheduledAt, 'datetime')} (Pacific)</p>
+      <p><strong>Duration:</strong> ${p.durationMinutes} min</p>
+      ${p.note ? `<p><strong>Note:</strong> "${p.note}"</p>` : ''}
+      ${p.isPending ? `<p><a href="${appUrl}/dashboard">Review in Cadence →</a></p>` : ''}
+    </div>
+  `
+  return { subject, html }
+}
+
+interface ApprovalEmailParams {
+  studentName: string
+  scheduledAt: string | Date
+  durationMinutes: number
+  approved: boolean
+}
+
+export function buildApprovalEmail(p: ApprovalEmailParams) {
+  const subject = p.approved
+    ? `Lesson confirmed — ${p.studentName} (${formatLessonTime(p.scheduledAt, 'short')})`
+    : `Lesson declined — ${p.studentName} (${formatLessonTime(p.scheduledAt, 'short')})`
+
+  const html = `
+    <div style="font-family:sans-serif;max-width:480px;">
+      <p>${p.approved
+        ? `✓ Your lesson request for <strong>${p.studentName}</strong> has been <strong>confirmed</strong>.`
+        : `Your lesson request for <strong>${p.studentName}</strong> was not approved. Please contact your teacher to find another time.`
+      }</p>
+      <p><strong>Time:</strong> ${formatLessonTime(p.scheduledAt, 'datetime')} (Pacific)</p>
+      <p><strong>Duration:</strong> ${p.durationMinutes} min</p>
+    </div>
+  `
+  return { subject, html }
+}
+
 interface RescheduleEmailParams {
   studentName: string
   originalAt: string | Date
