@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { LessonsList } from './_components/lessons-list'
+import { startOfMonth } from 'date-fns'
+import { ParentDashboard } from './_components/parent-dashboard'
 
 export default async function MyLessonsPage() {
   const supabase = await createClient()
@@ -8,7 +9,6 @@ export default async function MyLessonsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/magic-link')
 
-  // Find this parent's family
   const { data: family } = await supabase
     .from('families')
     .select('id, parent_name, students(id, name)')
@@ -25,24 +25,21 @@ export default async function MyLessonsPage() {
   }
 
   const studentIds = (family.students as { id: string; name: string }[]).map((s) => s.id)
+  const monthStart = startOfMonth(new Date())
 
   const { data: lessons } = await supabase
     .from('lessons')
-    .select('id, scheduled_at, duration_minutes, status, note, late_cancel, student_id, students(name)')
+    .select('id, scheduled_at, duration_minutes, status, students(name)')
     .in('student_id', studentIds.length ? studentIds : ['00000000-0000-0000-0000-000000000000'])
     .eq('status', 'scheduled')
-    .gte('scheduled_at', new Date().toISOString())
+    .gte('scheduled_at', monthStart.toISOString())
     .order('scheduled_at')
-    .limit(60)
+    .limit(200)
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Upcoming Lessons</h1>
-        <p className="text-gray-500 text-sm mt-1">Hi, {family.parent_name}</p>
-      </div>
-
-      <LessonsList lessons={lessons ?? []} />
-    </div>
+    <ParentDashboard
+      lessons={lessons ?? []}
+      parentName={family.parent_name}
+    />
   )
 }

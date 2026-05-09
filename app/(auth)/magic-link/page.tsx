@@ -20,12 +20,12 @@ export default function MagicLinkPage() {
       email,
       options: {
         emailRedirectTo: `${appUrl}/auth/callback?next=/my-lessons`,
-        shouldCreateUser: false,
+        shouldCreateUser: true,
       },
     })
 
     if (authError) {
-      setError('Could not send sign-in link. Check your email address.')
+      setError(authError.message)
       setLoading(false)
       return
     }

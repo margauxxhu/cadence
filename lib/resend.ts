@@ -36,3 +36,31 @@ export function buildCancelEmail(p: CancelEmailParams) {
 
   return { subject, html }
 }
+
+interface RescheduleEmailParams {
+  studentName: string
+  originalAt: string | Date
+  newAt: string | Date
+  durationMinutes: number
+  note: string
+  newLessonId: string
+}
+
+export function buildRescheduleEmail(p: RescheduleEmailParams) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+
+  const subject = `Reschedule — ${p.studentName} (${formatLessonTime(p.originalAt, 'short')} → ${formatLessonTime(p.newAt, 'short')})`
+
+  const html = `
+    <div style="font-family:sans-serif;max-width:480px;">
+      <p><strong>Student:</strong> ${p.studentName}</p>
+      <p><strong>Original time:</strong> ${formatLessonTime(p.originalAt, 'datetime')} (Pacific)</p>
+      <p><strong>New time:</strong> ${formatLessonTime(p.newAt, 'datetime')} (Pacific)</p>
+      <p><strong>Duration:</strong> ${p.durationMinutes} min</p>
+      <p><strong>Parent's note:</strong> "${p.note}"</p>
+      <p><a href="${appUrl}/lessons?id=${p.newLessonId}">View lesson in Cadence →</a></p>
+    </div>
+  `
+
+  return { subject, html }
+}

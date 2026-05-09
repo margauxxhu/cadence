@@ -44,7 +44,7 @@ export function CancelDialog({ lessonId, scheduledAt, onCancelled }: Props) {
         onClick={() => setOpen(true)}
         className="text-xs text-red-500 hover:text-red-700 font-medium"
       >
-        Cancel lesson
+        Cancel
       </button>
 
       {open && (
