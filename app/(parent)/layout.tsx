@@ -9,8 +9,8 @@ export default async function ParentLayout({ children }: { children: React.React
   return (
     <div className="min-h-screen">
       <nav className="bg-stone-900 border-b border-stone-800">
-        <div className="max-w-4xl mx-auto px-6 flex items-center justify-between h-14">
-          <span className="font-display text-stone-100 text-xl font-light tracking-[0.18em]">
+        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between h-14">
+          <span className="font-display text-white text-3xl font-semibold tracking-[0.10em]">
             Cadence
           </span>
           <form action="/api/auth/signout" method="post">
@@ -20,7 +20,7 @@ export default async function ParentLayout({ children }: { children: React.React
           </form>
         </div>
       </nav>
-      <main className="max-w-4xl mx-auto px-6 py-10">{children}</main>
+      <main className="max-w-6xl mx-auto px-6 py-10">{children}</main>
     </div>
   )
 }

@@ -3,7 +3,7 @@
 import { addDays, addWeeks, addMinutes, startOfDay } from 'date-fns'
 import { toZonedTime, fromZonedTime } from 'date-fns-tz'
 import { z } from 'zod'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { resend, buildRescheduleEmail } from '@/lib/resend'
 import { formatLessonTime } from '@/lib/format-lesson-time'
 
@@ -178,7 +178,8 @@ export async function rescheduleLesson(
 
   if (updateErr) return { error: updateErr.message }
 
-  const { data: newLesson, error: insertErr } = await supabase
+  const serviceClient = createServiceClient()
+  const { data: newLesson, error: insertErr } = await serviceClient
     .from('lessons')
     .insert({
       student_id: lesson.student_id,
@@ -205,14 +206,15 @@ export async function rescheduleLesson(
   })
 
   try {
-    await resend.emails.send({
+    const { error: emailErr } = await resend.emails.send({
       from: process.env.RESEND_FROM ?? 'Cadence <onboarding@resend.dev>',
       to: process.env.TEACHER_EMAIL ?? '',
       subject: emailContent.subject,
       html: emailContent.html,
     })
-  } catch {
-    // Don't fail the reschedule if email fails
+    if (emailErr) console.error('[reschedule] Resend error:', emailErr)
+  } catch (e) {
+    console.error('[reschedule] Email send threw:', e)
   }
 
   return { success: true }

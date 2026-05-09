@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { toZonedTime } from 'date-fns-tz'
 import { CalendarView } from './calendar-view'
 import { CancelDialog } from './cancel-dialog'
@@ -29,10 +30,14 @@ function toLADateStr(scheduledAt: string): string {
 }
 
 export function ParentDashboard({ lessons: initial, parentName, conflictedIds }: Props) {
+  const router = useRouter()
   const todayLA = toZonedTime(new Date(), TZ)
   const [year, setYear] = useState(todayLA.getFullYear())
   const [month, setMonth] = useState(todayLA.getMonth())
   const [lessons, setLessons] = useState(initial)
+
+  // Sync local state when server re-fetches after router.refresh()
+  useEffect(() => { setLessons(initial) }, [initial])
 
   const conflictedSet = new Set(conflictedIds)
 
@@ -51,12 +56,13 @@ export function ParentDashboard({ lessons: initial, parentName, conflictedIds }:
 
   function removeLesson(id: string) {
     setLessons((prev) => prev.filter((l) => l.id !== id))
+    router.refresh()
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">My Lessons</h1>
+        <h1 className="text-3xl font-semibold">My Lessons</h1>
         <p className="text-gray-500 text-sm mt-1">Hi, {parentName}</p>
       </div>
 
@@ -73,7 +79,7 @@ export function ParentDashboard({ lessons: initial, parentName, conflictedIds }:
         </div>
 
         {/* Month lesson list — 25% */}
-        <div className="w-64 shrink-0">
+        <div className="w-80 shrink-0">
           <div className="bg-white rounded-2xl p-4 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-semibold text-gray-700">

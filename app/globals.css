@@ -1,7 +1,11 @@
 @import "tailwindcss";
 
+html {
+  font-size: 112.5%; /* 18px base — scales all rem units up one step */
+}
+
 :root {
-  --background: #faf8f5;
+  --background: #fef9ec;
   --foreground: #1c1917;
 }
 
@@ -13,12 +17,10 @@
 }
 
 body {
-  background-color: var(--background);
-  /* Warm ambient glows at opposing corners — like soft candlelight */
-  background-image:
-    radial-gradient(ellipse at 12% 10%, rgba(252, 235, 210, 0.55) 0%, transparent 52%),
-    radial-gradient(ellipse at 88% 90%, rgba(232, 214, 190, 0.35) 0%, transparent 52%);
+  background-color: #fef9ec;
+  background-image: linear-gradient(145deg, #fef3c7 0%, #fce7f3 52%, #ede9fe 100%);
   background-attachment: fixed;
+  background-size: 100% 100%;
   color: var(--foreground);
   font-family: var(--font-sans, 'DM Sans', sans-serif);
 }

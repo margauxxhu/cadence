@@ -47,7 +47,7 @@ export function CalendarView({ lessonDates, conflictedDates, year, month, onMont
   while (cells.length % 7 !== 0) cells.push(null)
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm select-none">
+    <div className="bg-white rounded-2xl p-8 shadow-sm select-none">
       {/* Month / year header */}
       <div className="flex items-center justify-between mb-6">
         <button
@@ -92,10 +92,10 @@ export function CalendarView({ lessonDates, conflictedDates, year, month, onMont
             : (isToday ? 'bg-blue-300' : 'bg-blue-500')
 
           return (
-            <div key={i} className="flex flex-col items-center py-0.5">
+            <div key={i} className="flex flex-col items-center py-2">
               <div
                 className={`
-                  w-8 h-8 flex items-center justify-center rounded-full text-sm transition-colors
+                  w-10 h-10 flex items-center justify-center rounded-full text-sm transition-colors
                   ${isToday ? 'bg-blue-600 text-white font-semibold' : 'text-gray-800'}
                 `}
               >
