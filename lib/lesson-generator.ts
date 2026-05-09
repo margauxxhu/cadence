@@ -9,7 +9,6 @@ const HORIZON_WEEKS = 12
 type Client = SupabaseClient<Database>
 
 function nextWeekday(from: Date, targetWeekday: number): Date {
-  // Returns the first date >= from that falls on targetWeekday (0=Sun)
   const day = from.getDay()
   const diff = (targetWeekday - day + 7) % 7
   return addDays(from, diff === 0 ? 0 : diff)
@@ -20,22 +19,39 @@ export async function generateLessons(
 ): Promise<{ created: number; skipped: number }> {
   const today = startOfDay(new Date())
   const horizonEnd = addWeeks(today, HORIZON_WEEKS)
+  const todayStr = today.toISOString().slice(0, 10)
+  const horizonStr = horizonEnd.toISOString().slice(0, 10)
 
-  // Load all active assignments with student info
+  // Load active students
+  const { data: activeStudents, error: sErr } = await supabase
+    .from('students')
+    .select('id')
+    .eq('active', true)
+
+  if (sErr) throw sErr
+
+  const activeStudentIds = new Set((activeStudents ?? []).map((s) => s.id))
+
+  // Load assignments that overlap the horizon
   const { data: assignments, error: aErr } = await supabase
     .from('recurring_assignments')
-    .select('id, student_id, weekday, start_time, duration_minutes, active_from, active_until, students!inner(active)')
-    .eq('students.active', true)
-    .lte('active_from', horizonEnd.toISOString().slice(0, 10))
+    .select('id, student_id, weekday, start_time, duration_minutes, active_from, active_until')
+    .lte('active_from', horizonStr)
+    .or(`active_until.is.null,active_until.gte.${todayStr}`)
 
   if (aErr) throw aErr
+
+  // Filter to active students only
+  const filteredAssignments = (assignments ?? []).filter((a) =>
+    activeStudentIds.has(a.student_id)
+  )
 
   // Load blackouts overlapping the horizon
   const { data: blackouts, error: bErr } = await supabase
     .from('blackouts')
     .select('start_date, end_date')
-    .lte('start_date', horizonEnd.toISOString().slice(0, 10))
-    .gte('end_date', today.toISOString().slice(0, 10))
+    .lte('start_date', horizonStr)
+    .gte('end_date', todayStr)
 
   if (bErr) throw bErr
 
@@ -50,7 +66,7 @@ export async function generateLessons(
   if (eErr) throw eErr
 
   const existingKeys = new Set<string>(
-    (existing ?? []).map((l) => `${l.student_id}|${l.scheduled_at}`)
+    (existing ?? []).map((l) => `${l.student_id}|${new Date(l.scheduled_at).toISOString()}`)
   )
 
   function isBlackedOut(date: Date): boolean {
@@ -64,7 +80,7 @@ export async function generateLessons(
   const toInsert: Database['public']['Tables']['lessons']['Insert'][] = []
   let skipped = 0
 
-  for (const assignment of assignments ?? []) {
+  for (const assignment of filteredAssignments) {
     const activeFrom = startOfDay(new Date(assignment.active_from + 'T00:00:00'))
     const activeUntil = assignment.active_until
       ? startOfDay(new Date(assignment.active_until + 'T00:00:00'))
@@ -76,7 +92,6 @@ export async function generateLessons(
     )
 
     while (cursor <= horizonEnd && (!activeUntil || cursor <= activeUntil)) {
-      // Build the scheduled_at in LA timezone
       const [hours, minutes] = (assignment.start_time as string).split(':').map(Number)
       const laLocal = toZonedTime(cursor, TZ)
       laLocal.setHours(hours, minutes, 0, 0)
@@ -101,17 +116,17 @@ export async function generateLessons(
         duration_minutes: assignment.duration_minutes,
         status: 'scheduled',
       })
-      existingKeys.add(key) // prevent duplicates within this batch
+      existingKeys.add(key)
 
       cursor = addWeeks(cursor, 1)
     }
   }
 
   if (toInsert.length > 0) {
-    const { error: iErr } = await supabase
-      .from('lessons')
-      .upsert(toInsert, { onConflict: 'student_id,scheduled_at', ignoreDuplicates: true })
-
+    // Plain insert — idempotency is guaranteed by the existingKeys check above.
+    // The unique partial index on (student_id, scheduled_at) WHERE status='scheduled'
+    // is a DB-level safety net for concurrent runs.
+    const { error: iErr } = await supabase.from('lessons').insert(toInsert)
     if (iErr) throw iErr
   }
 
