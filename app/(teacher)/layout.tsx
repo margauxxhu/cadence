@@ -7,7 +7,6 @@ const NAV = [
   { href: '/families', label: 'Families' },
   { href: '/assignments', label: 'Your Schedule' },
   { href: '/availability', label: 'Availability' },
-  { href: '/blackouts', label: 'Blackouts' },
   { href: '/lessons', label: 'Lesson History' },
 ]
 

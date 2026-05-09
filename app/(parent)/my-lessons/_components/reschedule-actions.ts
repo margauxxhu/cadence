@@ -46,8 +46,12 @@ export async function getAvailableSlots(lessonId: string): Promise<{
   const todayStr = today.toISOString().slice(0, 10)
   const horizonStr = horizonEnd.toISOString().slice(0, 10)
 
-  const [{ data: windows }, { data: blackouts }, { data: existing }] = await Promise.all([
-    supabase.from('availability_template').select('weekday, start_time, end_time'),
+  const [{ data: periods }, { data: blackouts }, { data: existing }] = await Promise.all([
+    supabase
+      .from('availability_periods')
+      .select('id, start_date, end_date, availability_windows(weekday, start_time, end_time), period_exceptions(exception_date)')
+      .lte('start_date', horizonStr)
+      .gte('end_date', todayStr),
     supabase.from('blackouts').select('start_date, end_date').lte('start_date', horizonStr).gte('end_date', todayStr),
     supabase
       .from('lessons')
@@ -58,7 +62,15 @@ export async function getAvailableSlots(lessonId: string): Promise<{
       .lte('scheduled_at', horizonEnd.toISOString()),
   ])
 
-  if (!windows?.length) return { slots: [] }
+  if (!periods?.length) return { slots: [] }
+
+  type PeriodRow = {
+    id: string
+    start_date: string
+    end_date: string
+    availability_windows: { weekday: number; start_time: string; end_time: string }[]
+    period_exceptions: { exception_date: string }[]
+  }
 
   function isBlackedOut(laDateStr: string): boolean {
     return (blackouts ?? []).some((b) => laDateStr >= b.start_date && laDateStr <= b.end_date)
@@ -82,8 +94,17 @@ export async function getAvailableSlots(lessonId: string): Promise<{
     const weekday = laDay.getDay()
     const laDateStr = `${laDay.getFullYear()}-${String(laDay.getMonth() + 1).padStart(2, '0')}-${String(laDay.getDate()).padStart(2, '0')}`
 
-    if (!isBlackedOut(laDateStr)) {
-      const dayWindows = (windows ?? []).filter((w) => w.weekday === weekday)
+    const activePeriods = (periods as PeriodRow[]).filter(
+      (p) => laDateStr >= p.start_date && laDateStr <= p.end_date
+    )
+    const isExcepted = activePeriods.some((p) =>
+      p.period_exceptions.some((e) => e.exception_date === laDateStr)
+    )
+    const dayWindows = activePeriods.flatMap((p) =>
+      p.availability_windows.filter((w) => w.weekday === weekday)
+    )
+
+    if (!isBlackedOut(laDateStr) && !isExcepted) {
       for (const w of dayWindows) {
         const [sh, sm] = (w.start_time as string).split(':').map(Number)
         const [eh, em] = (w.end_time as string).split(':').map(Number)

@@ -12,28 +12,85 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      availability_template: {
+      availability_periods: {
+        Row: {
+          end_date: string
+          id: string
+          name: string
+          start_date: string
+        }
+        Insert: {
+          end_date: string
+          id?: string
+          name: string
+          start_date: string
+        }
+        Update: {
+          end_date?: string
+          id?: string
+          name?: string
+          start_date?: string
+        }
+        Relationships: []
+      }
+      availability_windows: {
         Row: {
           end_time: string
           id: string
+          period_id: string
           start_time: string
           weekday: number
         }
         Insert: {
           end_time: string
           id?: string
+          period_id: string
           start_time: string
           weekday: number
         }
         Update: {
           end_time?: string
           id?: string
+          period_id?: string
           start_time?: string
           weekday?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "availability_windows_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "availability_periods"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       blackouts: {
         Row: {
@@ -124,6 +181,35 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      period_exceptions: {
+        Row: {
+          exception_date: string
+          id: string
+          period_id: string
+          reason: string | null
+        }
+        Insert: {
+          exception_date: string
+          id?: string
+          period_id: string
+          reason?: string | null
+        }
+        Update: {
+          exception_date?: string
+          id?: string
+          period_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "period_exceptions_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "availability_periods"
             referencedColumns: ["id"]
           },
         ]
@@ -348,6 +434,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       lesson_status: ["scheduled", "cancelled", "rescheduled", "completed"],

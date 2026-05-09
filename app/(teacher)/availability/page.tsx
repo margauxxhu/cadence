@@ -1,44 +1,46 @@
 import { createClient } from '@/lib/supabase/server'
-import { AvailabilityForm } from './_components/availability-form'
-import { deleteAvailabilityWindow } from './_components/availability-actions'
-
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
-function fmt12(t: string) {
-  const [h, m] = t.split(':').map(Number)
-  const ampm = h >= 12 ? 'PM' : 'AM'
-  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`
-}
+import { PeriodCard } from './_components/period-card'
+import { PeriodForm } from './_components/period-form'
+import { BlackoutSection } from './_components/blackout-section'
 
 export default async function AvailabilityPage() {
   const supabase = await createClient()
-  const { data: windows } = await supabase
-    .from('availability_template')
-    .select('*')
-    .order('weekday')
-    .order('start_time')
+
+  const [{ data: periods }, { data: blackouts }] = await Promise.all([
+    supabase
+      .from('availability_periods')
+      .select('id, name, start_date, end_date, availability_windows(id, weekday, start_time, end_time), period_exceptions(id, exception_date, reason)')
+      .order('start_date'),
+    supabase
+      .from('blackouts')
+      .select('id, start_date, end_date, reason')
+      .order('start_date'),
+  ])
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Availability</h1>
-      <AvailabilityForm />
-      <div className="bg-white rounded-xl border divide-y">
-        {!windows?.length ? (
-          <p className="px-4 py-6 text-gray-400 text-sm">No windows yet.</p>
-        ) : (
-          windows.map((w) => (
-            <div key={w.id} className="flex items-center justify-between px-4 py-3">
-              <p className="text-sm">
-                <span className="font-medium">{DAYS[w.weekday]}</span>{' '}
-                {fmt12(w.start_time as string)} – {fmt12(w.end_time as string)}
-              </p>
-              <form action={async () => { 'use server'; await deleteAvailabilityWindow(w.id) }}>
-                <button className="text-xs text-red-500 hover:text-red-700">Remove</button>
-              </form>
-            </div>
-          ))
+    <div className="space-y-10">
+      {/* Availability periods */}
+      <section className="space-y-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Availability</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Define which days and times you&apos;re available each semester. Add day exceptions for individual days off within a period.
+          </p>
+        </div>
+
+        {(!periods || periods.length === 0) && (
+          <p className="text-sm text-gray-400">No periods yet. Create one to get started.</p>
         )}
-      </div>
+
+        {periods?.map((p) => (
+          <PeriodCard key={p.id} period={p as Parameters<typeof PeriodCard>[0]['period']} />
+        ))}
+
+        <PeriodForm />
+      </section>
+
+      {/* Holiday blackouts */}
+      <BlackoutSection blackouts={blackouts ?? []} />
     </div>
   )
 }
