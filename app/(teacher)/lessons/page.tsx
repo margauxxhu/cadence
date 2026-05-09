@@ -22,7 +22,7 @@ export default async function LessonsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">All Lessons</h1>
+      <h1 className="text-2xl font-semibold">Lesson History</h1>
 
       <div className="bg-white rounded-xl border divide-y">
         {!lessons?.length ? (

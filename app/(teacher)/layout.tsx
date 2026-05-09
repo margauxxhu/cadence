@@ -5,10 +5,10 @@ import { createClient } from '@/lib/supabase/server'
 const NAV = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/families', label: 'Families' },
-  { href: '/assignments', label: 'Assignments' },
+  { href: '/assignments', label: 'Your Schedule' },
   { href: '/availability', label: 'Availability' },
   { href: '/blackouts', label: 'Blackouts' },
-  { href: '/lessons', label: 'All Lessons' },
+  { href: '/lessons', label: 'Lesson History' },
 ]
 
 export default async function TeacherLayout({ children }: { children: React.ReactNode }) {

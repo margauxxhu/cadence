@@ -28,7 +28,7 @@ export default async function AssignmentsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Recurring Assignments</h1>
+      <h1 className="text-2xl font-semibold">Your Schedule</h1>
       <AssignmentForm students={(students ?? []) as { id: string; name: string; families: { parent_name: string } | null }[]} />
 
       <div className="bg-white rounded-xl border divide-y">

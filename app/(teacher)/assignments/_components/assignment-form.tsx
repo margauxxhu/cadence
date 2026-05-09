@@ -23,7 +23,7 @@ export function AssignmentForm({ students }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-xl border p-4 space-y-3">
-      <h2 className="font-medium text-sm">Add recurring assignment</h2>
+      <h2 className="font-medium text-sm">Add recurring lesson</h2>
       <div className="flex flex-wrap gap-3 items-end">
         <div>
           <label className="block text-xs font-medium mb-1">Student</label>

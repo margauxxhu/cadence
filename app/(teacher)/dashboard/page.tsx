@@ -80,10 +80,10 @@ export default async function DashboardPage() {
       <section className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {[
           { href: '/families', label: 'Manage families' },
-          { href: '/assignments', label: 'Recurring assignments' },
+          { href: '/assignments', label: 'Your schedule' },
           { href: '/availability', label: 'Availability windows' },
           { href: '/blackouts', label: 'Blackout dates' },
-          { href: '/lessons', label: 'All lessons' },
+          { href: '/lessons', label: 'Lesson history' },
         ].map((item) => (
           <Link
             key={item.href}
