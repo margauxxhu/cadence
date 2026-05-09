@@ -6,9 +6,9 @@ Scheduling software built around how recurring lessons actually work — not how
 
 ## Why this exists
 
-A seasoned piano teacher with 30+ students was still managing her schedule through text messages. Not because she hadn't tried the alternatives — she had. Calendly, Acuity, and their peers are built around one-off appointments. Piano lessons don't work that way.
+A seasoned piano teacher with ～50 students was still managing her schedule through text messages. 
 
-Every student holds the same slot every week for an entire semester. The real overhead isn't scheduling — it's the exceptions: the sick kid, the holiday week, the last-minute reschedule. No freemium tool handles that elegantly without charging for features she'll never use or forcing parents through an onboarding flow they'll abandon.
+Every student holds the same slot every week for an entire semester, but the real overhead lies in the exceptions: the sick kid, the holiday week, the last-minute reschedule. No freemium tool handles that elegantly without charging for features she'll never use or forcing parents through an onboarding flow they'll abandon.
 
 Cadence was built for her. It does exactly what she needs and nothing she doesn't. The code is open-source so any independent teacher, trainer, or tutor can deploy their own instance.
 
