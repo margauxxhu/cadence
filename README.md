@@ -23,7 +23,7 @@ Cadence is designed around that reality:
 - Lessons skip blackout periods automatically
 - Full lesson history with late-cancel flags highlighted
 
-**Parents**
+**Students / Parents**
 - Magic-link sign-in (no password)
 - View all upcoming lessons for every child in the family
 - Cancel any lesson with a required note
