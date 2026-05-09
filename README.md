@@ -1,52 +1,126 @@
 # Cadence
 
-Scheduling software built for a single piano teacher managing ~50 students. Replaces the back-and-forth of text messages for cancellations and reschedules with a clean parent-facing portal — without requiring parents to create yet another account.
+Scheduling software built around how recurring lessons actually work — not how booking tools assume they do.
 
-## Why Cadence
+---
 
-Most scheduling tools (Calendly, Acuity, etc.) are built around one-off bookings. Piano lessons don't work that way: every student has a fixed recurring slot for the semester. The real work is handling the exceptions — a sick kid, a holiday week, a family vacation.
+## Why this exists
 
-Cadence is designed around that reality:
+A seasoned piano teacher with 30+ students was still managing her schedule through text messages. Not because she hadn't tried the alternatives — she had. Calendly, Acuity, and their peers are built around one-off appointments. Piano lessons don't work that way.
 
-- **Roster-first, not booking-first.** Lessons are auto-generated from each student's recurring weekly slot. The teacher sets the template once; Cadence handles the calendar.
-- **Exception management, not slot discovery.** Parents see their upcoming lessons and can cancel with a note. No browsing, no back-and-forth.
-- **No app to install.** Parents sign in with a magic link sent to their email. One tap, done.
-- **iCal feed, not another calendar.** The teacher subscribes to a private feed URL that appears natively in Apple Calendar. No separate app, no dashboard to check.
-- **Free to host.** Runs entirely on Vercel and Supabase free tiers.
+Every student holds the same slot every week for an entire semester. The real overhead isn't scheduling — it's the exceptions: the sick kid, the holiday week, the last-minute reschedule. No freemium tool handles that elegantly without charging for features she'll never use or forcing parents through an onboarding flow they'll abandon.
+
+Cadence was built for her. It does exactly what she needs and nothing she doesn't. The code is open-source so any independent teacher, trainer, or tutor can deploy their own instance.
+
+---
 
 ## Features
 
 **Teacher**
-- Dashboard with this week's lessons and a one-click iCal subscription link
-- CRUD for families, students, availability windows, recurring assignments, and blackout dates
-- Auto-generated lessons on a rolling 12-week horizon (idempotent — re-running never duplicates)
-- Lessons skip blackout periods automatically
-- Full lesson history with late-cancel flags highlighted
+- **Roster-first:** Lessons auto-generate from each student's fixed weekly slot. Set the template once; Cadence maintains a rolling 12-week calendar automatically.
+- **Availability periods:** Define working windows by semester with day-level granularity. Layer exceptions (full-day or partial time blocks) on top without restructuring anything.
+- **Blackout dates:** Mark a holiday or vacation once; all overlapping lessons are excluded from generation.
+- **Pending approvals:** Trial requests from new students surface in the dashboard for one-click approve or decline — with an email sent to the parent either way.
+- **iCal feed:** Subscribe once via a private URL; lessons appear natively in Apple Calendar. No separate dashboard to check.
+- **Lesson history:** Full audit trail of every lesson — scheduled, cancelled, rescheduled, completed — with late-cancel flags surfaced.
 
-**Students / Parents**
-- Magic-link sign-in (no password)
-- View all upcoming lessons for every child in the family
-- Cancel any lesson with a required note
-- Late cancellations (within 24 hours) are allowed but flagged — teacher receives an email with a warning subject line
+**Parents**
+- **Magic-link sign-in:** No password, no app to install. One email, one tap.
+- **Invite-only access:** Only families the teacher has registered can sign in. No open self-signup.
+- **Cancel:** Cancel any lesson with a required note. Late cancellations (within 24 hours) are allowed but flagged — no hidden friction, full transparency.
+- **Reschedule:** Pick a new slot from a live mini-calendar showing real availability, not a static list.
+- **Add a lesson:** Book an extra slot for an existing student (confirmed immediately) or request a trial for a new student (pending teacher approval).
+- **Conflict alerts:** If the teacher adds an exception after a lesson was already generated, an amber warning prompts the parent to reschedule.
 
 **Notifications**
-- Teacher receives an email on every cancellation via Resend
-- Late-cancel emails have a distinct subject (`⚠ LATE CANCEL`) for easy filtering
+- **Cancellation email:** Teacher receives an instant alert on every cancel; late cancellations arrive with a distinct subject line for easy filtering.
+- **Reschedule email:** Teacher sees the original time, new time, and the parent's note — in one email.
+- **Approval email:** Parent receives a confirmation or decline the moment the teacher acts.
 
-## Stack
+---
 
-| Layer | Choice |
+## How it fits together
+
+```
+Teacher (browser)                         Parent (email → browser)
+       │                                           │
+       │ email + password                          │ magic link
+       ▼                                           ▼
+┌────────────────────────────────────────────────────────────┐
+│                     Next.js  ·  Vercel                      │
+│                                                            │
+│  /dashboard   /families   /availability                    │
+│  /assignments /lessons    /blackouts      /my-lessons      │
+│                                                            │
+│  /api/ical/[token] ─────────────────────────────────────── ▶ Apple Calendar
+│  /api/cron/generate-lessons ◄── Vercel Cron (daily 6am)    │
+└──────────────────────────┬─────────────────────────────────┘
+                           │
+              ┌────────────┴────────────┐
+              ▼                         ▼
+       ┌─────────────┐           ┌────────────┐
+       │  Supabase   │           │   Resend   │
+       │  Postgres   │           │            │
+       │  + Auth     │           │ ──▶ teacher email
+       │  + RLS      │           │ ──▶ parent email
+       └─────────────┘           └────────────┘
+```
+
+**Key decisions**
+
+- **Server Components by default.** Client components only where interactivity is required.
+- **Server Actions for all mutations.** No separate API layer for writes.
+- **UTC storage, Pacific display.** All timestamps stored in UTC; a single `formatLessonTime()` helper handles display in `America/Los_Angeles`.
+- **RLS at the database layer.** Parents can only read and modify their own family's records — enforced in Postgres, not just the application.
+- **Idempotent lesson generation.** A unique partial index on `(student_id, scheduled_at) WHERE status = 'scheduled'` prevents duplicates even if the cron fires twice.
+
+---
+
+## Self-hosting
+
+Designed to run on free tiers. One teacher, one deployment.
+
+### What you'll need
+
+| Service | Purpose | Cost |
+|---|---|---|
+| [Supabase](https://supabase.com) | Database, auth, row-level security | Free |
+| [Vercel](https://vercel.com) | Hosting + daily cron | Free |
+| [Resend](https://resend.com) | Notification emails | Free up to 3,000/mo |
+| A custom domain | Verified sender for Resend (production only) | ~$10–15/yr |
+
+> Without a verified sender domain, Resend can only deliver to the account owner's email. For local testing or a setup where the teacher's email matches the Resend account, this is sufficient. Sending notifications to parent emails requires a verified domain.
+
+### Setup steps
+
+1. Fork this repo and connect it to Vercel via GitHub
+2. Create a Supabase project and run the migrations in `supabase/migrations/` via the SQL editor
+3. Copy `.env.example` and set all values as Vercel environment variables
+4. Sign in as the teacher, then register your account in the database:
+   ```sql
+   UPDATE teacher_settings SET teacher_uid = '<your auth.users id>' WHERE id = 1;
+   ```
+5. Add your first family from the teacher dashboard — magic-link access is invite-only from here
+
+### Environment variables
+
+| Variable | Description |
 |---|---|
-| Framework | Next.js 16 (App Router, Server Actions) |
-| Database + Auth | Supabase (Postgres + magic-link) |
-| Styling | Tailwind CSS |
-| Email | Resend |
-| Deployment | Vercel (hobby tier) |
-| Package manager | pnpm |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (server-side only) |
+| `RESEND_API_KEY` | Resend API key |
+| `RESEND_FROM` | Verified sender, e.g. `Cadence <hello@yourdomain.com>` |
+| `TEACHER_EMAIL` | Where teacher notifications are delivered |
+| `NEXT_PUBLIC_APP_URL` | Your deployment URL, e.g. `https://cadence.yourdomain.com` |
+| `CRON_SECRET` | Random secret to authenticate the lesson-generation cron endpoint |
+| `CANCEL_CUTOFF_HOURS` | Hours before a lesson at which a cancellation is flagged as late (default: 24) |
 
-## Local Development
+---
 
-**Prerequisites:** Node 18+, pnpm, Docker (for Supabase local), [Supabase CLI](https://supabase.com/docs/guides/cli)
+## Local development
+
+**Prerequisites:** Node 18+, pnpm, Docker, [Supabase CLI](https://supabase.com/docs/guides/cli)
 
 ```bash
 git clone https://github.com/margauxxhu/cadence
@@ -59,50 +133,26 @@ supabase start
 # Apply schema
 supabase db reset
 
-# Generate TypeScript types from local schema
+# Generate TypeScript types
 supabase gen types typescript --local > types/supabase.ts
 
-# Copy env template and fill in values from `supabase start` output
+# Copy env and fill in values from `supabase start` output
 cp .env.example .env.local
-```
 
-Then start the dev server:
-
-```bash
 pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Environment Variables
+---
 
-See `.env.example` for the full list. Key variables:
+## Stack
 
-| Variable | Description |
+| Layer | Choice |
 |---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (cron + iCal routes only) |
-| `RESEND_API_KEY` | Resend API key for cancellation emails |
-| `TEACHER_EMAIL` | Where cancellation emails are sent |
-| `CRON_SECRET` | Shared secret for the lesson-generator cron endpoint |
-| `CANCEL_CUTOFF_HOURS` | Hours before a lesson at which a cancel is flagged as late (default: 24) |
-
-## One-Time Setup After First Login
-
-After signing in as the teacher for the first time, register your user ID in the database:
-
-```sql
--- Run in Supabase Studio or SQL editor
-UPDATE teacher_settings
-SET teacher_uid = '<your auth.users id>'
-WHERE id = 1;
-```
-
-## Architecture Notes
-
-- Server Components by default; client components only where interactivity is required
-- Server Actions for all mutations
-- Times stored as UTC, displayed in `America/Los_Angeles` via a single `formatLessonTime()` helper
-- Row Level Security enforced at the database layer — parents can only read and update their own family's lessons
-- Lesson generator is idempotent: a unique partial index on `(student_id, scheduled_at) WHERE status = 'scheduled'` prevents duplicate rows even under concurrent runs
+| Framework | Next.js 16 (App Router, Server Actions) |
+| Database + Auth | Supabase (Postgres + magic-link) |
+| Styling | Tailwind CSS v4 |
+| Email | Resend |
+| Deployment | Vercel |
+| Package manager | pnpm |
