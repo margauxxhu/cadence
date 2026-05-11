@@ -40,6 +40,7 @@ export async function approveLesson(lessonId: string): Promise<{ error?: string 
 
 export async function declineLesson(lessonId: string): Promise<{ error?: string }> {
   const supabase = await createClient()
+  // Service client: parent INSERT policy doesn't cover status updates from teacher actions
   const service = createServiceClient()
 
   const { data: lesson } = await supabase

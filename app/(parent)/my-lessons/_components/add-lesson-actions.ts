@@ -160,6 +160,7 @@ export async function addLesson(
 
   const isPending = (count ?? 0) === 0
 
+  // Service client: RLS bypassed — student/family ownership verified above before this point
   const service = createServiceClient()
   const { error: insertErr } = await service
     .from('lessons')

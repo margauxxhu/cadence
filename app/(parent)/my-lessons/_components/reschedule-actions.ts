@@ -178,6 +178,7 @@ export async function rescheduleLesson(
 
   if (updateErr) return { error: updateErr.message }
 
+  // Service client: RLS bypassed — family ownership verified above before this point
   const serviceClient = createServiceClient()
   const { data: newLesson, error: insertErr } = await serviceClient
     .from('lessons')

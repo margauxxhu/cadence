@@ -33,7 +33,6 @@ interface Semester {
 
 interface Props {
   lessons: Lesson[]
-  students: { id: string; name: string }[]
   semesters: Semester[]
 }
 
@@ -84,24 +83,22 @@ function semesterLabel(s: Semester): string {
   return `Fall ${year}`
 }
 
-export function LessonCalendarView({ lessons, students, semesters }: Props) {
+// Hash student UUID → stable palette slot regardless of list order
+function studentColor(studentId: string) {
+  let h = 0
+  for (let i = 0; i < studentId.length; i++) {
+    h = (h * 31 + studentId.charCodeAt(i)) >>> 0
+  }
+  return PALETTE[h % PALETTE.length]
+}
+
+export function LessonCalendarView({ lessons, semesters }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [currentMonth, setCurrentMonth] = useState(() => startOfMonth(new Date()))
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState('all')
   const [markedDone, setMarkedDone] = useState<Set<string>>(new Set())
-
-  // student id → palette
-  const colorMap = useMemo(() => {
-    const map = new Map<string, typeof PALETTE[number]>()
-    students.forEach((s, i) => map.set(s.id, PALETTE[i % PALETTE.length]))
-    return map
-  }, [students])
-
-  function color(studentId: string) {
-    return colorMap.get(studentId) ?? PALETTE[0]
-  }
 
   // Filter lessons
   const filtered = useMemo(() => {
@@ -298,7 +295,7 @@ export function LessonCalendarView({ lessons, students, semesters }: Props) {
 
                 <div className="space-y-[3px]">
                   {visible.map((l) => {
-                    const c = color(l.student_id)
+                    const c = studentColor(l.student_id)
                     const firstName = (l.students?.name ?? '—').split(' ')[0]
                     return (
                       <div
@@ -354,7 +351,7 @@ export function LessonCalendarView({ lessons, students, semesters }: Props) {
                 </p>
                 <div className="bg-white rounded-xl border divide-y">
                   {dayLessons.map((l) => {
-                    const c = color(l.student_id)
+                    const c = studentColor(l.student_id)
                     const name = l.students?.name ?? '—'
                     return (
                       <div key={l.id} className="px-3 py-2.5">
